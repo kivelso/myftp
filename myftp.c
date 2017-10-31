@@ -7,24 +7,43 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "pwd.c"
-#include "dir.c"
-#include "cd.c"
+#include <string.h>
+#include <sys/wait.h>
+//#include "pwd.c"
+//#include "dir.c"
+//#include "cd.c"
 
-void DoPWD();
-void DoDir();
-void DoCd();
+const int BUFF_SIZE = 1024;
+
+//void DoPWD();
+//void DoDir();
+//void DoCd();
+
+void parse(char[], char**);
+void execute(char**);
+void deamonExecute(char**);
 
 int main(int argc, char **argv){
-    char buffer[1024];
+    char buffer[BUFF_SIZE];
     char *args[512];
 
-    printf("Type EXIT to exit.\n");
+    printf("Type quit to exit.\n");
+    //loop forever, exit() call within loop
     while(1){
         //Prompt for and read a command.
-        printf("Enter command: ");
+        printf(">");
 
-        if (gets(buffer) == NULL) {
+	fgets(buffer, BUFF_SIZE, stdin);
+	int i;
+	//strip newline then break
+	for(i=0;1<BUFF_SIZE; i++){
+	    if(buffer[i] == '\n'){
+		buffer[i] = '\0';
+		break;
+	    }
+	}
+        //exit on "quit"
+        if (strcmp(buffer, "quit") == 0){
             printf("\n");
             exit(0);
         }
@@ -32,8 +51,17 @@ int main(int argc, char **argv){
         //Split the string into arguments.
         parse(buffer, args);
 
-        //Execute the command.
-        execute(args);
+	if(*args == "ldir" ||
+	   *args == "lpwd" ||
+ 	   *args == "lcd")
+	{
+	    execute(args);
+	}else{//dir||pwd||cd||put||get
+            deamonExecute(args);
+	}
+
+	 //Execute the command.
+         //execute(args);
     }
 }
 
@@ -42,7 +70,7 @@ int main(int argc, char **argv){
  * split the command in buf into
  *         individual arguments.
  *******************************/
-parse(buffer, args)
+void parse(buffer, args)
 char *buffer;
 char **args;
 {
@@ -69,53 +97,63 @@ char **args;
 /*****************************
  * spawn a child process and
  *       execute the program.
+ * Param: args: 1st is the program to run.
+ *        The rest are program arguments
  *****************************/
-execute(args)
+void execute(args)
 char **args;
 {
     int pid, status;
 
-    /*
-     * Get a child process.
-     */
-    if ((pid = fork()) < 0) {
+    //Get a child process.
+    if ((pid = fork()) < 0){
         perror("fork");
         exit(1);
 
 	/* NOTE: perror() produces a short  error  message  on  the  standard
            error describing the last error encountered during a call to
-           a system or library function.
-       */
+           a system or library function. */
     }
 
-    /*
-     * The child executes the code inside the if.
-     */
-    if (pid == 0) {
+    //The child executes the code inside the if.
+    if (pid == 0){
         execvp(*args, args);
         perror(*args);
         exit(1);
 
-       /* NOTE: The execv() vnd execvp versions of execl() are useful when the
-          number  of  arguments is unknown in advance;
-          The arguments to execv() and execvp()  are the name
-          of the file to be executed and a vector of strings  contain-
-          ing  the  arguments.   The last argument string must be fol-
-          lowed by a 0 pointer.
-
-          execlp() and execvp() are called with the same arguments  as
-          execl()  and  execv(),  but duplicate the shell's actions in
-          searching for an executable file in a list  of  directories.
-          The directory list is obtained from the environment.
-        */
     }
 
-    /*
-     * The parent executes the wait.
-     */
+    //The parent executes the wait.
     while (wait(&status) != pid)
         /* empty */ ;
 }
+
+/*********************************
+ * Send the request to the server and await response
+ * Param: args: 1st is the program to run.
+ *        The others are program arguments.
+ ********************************/
+void deamonExecute(args)
+char **args;
+{
+    //DO NETWORKING THINGS
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /*
     int i = 0;
