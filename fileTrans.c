@@ -1,116 +1,123 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <sys/socket>
-#include <sys/types>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#define bytesRW 8192
 
 int getClient(char * fileName, int sd)
 {
-	int bytesWritten, bytesRead;
-	char * buffer, *p;
-	fd = open(fileName, O_WRONLY);
-
-
-	while(1)
-	{
-		
-		bytesRead = read(sd, buffer, sizeof(buffer));
+	int bytesWritten, bytesRead, fd;
+	char buffer[bytesRW], *p;
 	
-		if(bytesRead = 0)
-			break;
-		
-		if(bytesRead < 0){
-			//error handling
+	if((fd = open(fileName, O_WRONLY)) == -1)// opens file to be read to
+	{
+		printf("Error: unable to read file.\n");
+		exit(1);
+	}
+	
+	while(1)//loops through until socket has been fully read from
+	{
+		if((bytesRead = read(sd, buffer, sizeof(buffer))==-1))
+		{
+			printf("Error: unable to read file.\n");
+			exit(1);
 		}
+	
+		if(bytesRead == 0) //exits loop as socket has been fully read from
+			break;
 		
 		*p = buffer;
 
 		while(bytesRead>0)
 		{
-			bytesWritten = write(fd, p, bytesRead);
-			
-			if(bytesWritten <=0){
-				//handle errors
+			if((bytesWritten = write(fd, p, bytesRead)) == -1)
+			{
+				printf("Error: cannot write full string.\n");
+				exit(1);
 			}
 			
-			bytesRead-=bytesWritten
+			bytesRead-=bytesWritten;
 			p+= bytesWritten;
 		}
 	}
 
 	close(fd);
-	return 0;
+	exit(0);
 }
 
 int getServer(char * fileName, int sd)
 {
-	fd = open(fileName, O_RDONLY);
+	int fd, bytesRead, bytesWritten;
 
-	char * buffer, *p;
+	char buffer[bytesRW], *p;
 	
-	int bytesRead, bytesWritten;
-
-	while(1)
+	if( (fd= open(fileName, O_RDONLY)) == -1) // opens file to be read from
 	{
-		
-		bytesRead = read(fd, buffer, sizeof(buffer));
+		printf("Error: unable to open file\n");
+		exit(1);
+	}
 	
-		if(bytesRead = 0)
+	while(1) //loops through until file fully read through
+	{
+		if((bytesRead = read(fd, buffer, sizeof(buffer))) == -1) 
+		{
+			printf("Error: unable to read file");
+			exit(1);
+		}
+	
+		if(bytesRead == 0)//exits loop as eof has been reached
 			break;
 		
-		if(bytesRead < 0)
-		{
-			//error handling
-		}
-		
-		*p = buffer;
+		*p = buffer;// points p to character array buffer which contains read bytes
 
-		while(bytesRead>0)
+		while(bytesRead>0) //loops until read bytes fully written to socket
 		{
-			bytesWritten = write(sd, p, bytesRead);
-			
-			if(bytesWritten <=0){
-				//handle errors
+			if((bytesWritten = write(sd, p, bytesRead)) == -1)
+			{
+				printf("Error: Write failed.\n");
+				exit(1);
 			}
 			
 			bytesRead-=bytesWritten;
 			p+= bytesWritten;
 		}
 	}
-
 	close (fd);
-
-	return 0;
+	exit(0);
 }
 
 int putClient(char * fileName, int sd)
 {
-	fd = open(fileName, O_RDONLY);//opens file to be written to
-
-	char * buffer, *p;//buffer for containing read bytes
-	int bytesRead, bytesWritten;
-
-	while(1)
-	{
-		
-		bytesRead = read(fd, buffer, sizeof(buffer));
+	int bytesRead, bytesWritten, fd;
+	char buffer[bytesRW], *p;//buffer for containing read bytes
 	
-		if(bytesRead = 0)
-			break;
-		
-		if(bytesRead < 0)
+	if(( fd = open(fileName, O_RDONLY)) == -1);//opens file to be read in to
+	{
+		printf("Error: File failed to open.\n");
+		exit(1);
+	}
+	
+	while(1)//loop until file fully read through
+	{
+		if((bytesRead = read(fd, buffer, sizeof(buffer))) == -1)
 		{
-			//error handling
+			printf("Error: failed write.\n");
+			exit(1);
 		}
 		
-		*p = buffer;
+		if(bytesRead == 0)//exits loop as eof has been reached
+			break;
+		
+		*p = buffer;// points p to character array buffer which contains read bytes
 
-		while(bytesRead>0)
+		while(bytesRead>0)//loops until buffer fully written to socket
 		{
-			bytesWritten = write(sd, p, bytesRead);
-			
-			if(bytesWritten <=0){
-				//handle errors
+			if((bytesWritten = write(sd, p, bytesRead)) == -1)
+			{
+				printf("Error: unable to write to file.\n");
+				exit(1);
 			}
 			
 			bytesRead-=bytesWritten;
@@ -119,47 +126,46 @@ int putClient(char * fileName, int sd)
 	}
 
 	close (fd);
-
 	return 0;
 }
 
 int putServer(char * fileName, int sd)
 {
-	fd = open(fileName, O_WRONLY);
+	int bytesRead, bytesWritten, fd;
+	char buffer[bytesRW], *p;
 
-	char * buffer, *p;
-
-	int bytesRead, bytesWritten;
-
-	while(1)
+	if((fd = open(fileName, O_WRONLY)) == -1)//opens file to be written to
 	{
-		bytesRead = read(sd, buffer, sizeof(buffer));
+		printf("Error: could not open file.\n");
+		exit(1);
+	}
 
-		if(bytesRead = 0)
-			break;
-
-		if(bytesRead < 0)
+	while(1)// loop until socket fully read through
+	{
+		if((bytesRead = read(sd, buffer, sizeof(buffer))) == -1)
 		{
-			//error handling
+			printf("Error: could not read from file.\n");
+			exit(1);
 		}
 
-		*p = buffer;
+		if(bytesRead == 0)// exits loop if nothing left to read from socket
+			break;
 
-		while(bytesRead>0)
+		*p = buffer;// points p to character array buffer which contains read bytes
+
+		while(bytesRead>0)// loops until read files fully written to file
 		{
-			bytesWritten = write(fd, p, bytesRead);
-			
-			if(bytesWritten <=0)
-			{		
-				//handle errors
+			if ((bytesWritten = write(fd, p, bytesRead)) == -1)
+			{
+				printf("Error: write failed.\n");
+				exit(1);
 			}
 			
 			bytesRead-=bytesWritten;
-			b+=bytesWritten;
+			p+=bytesWritten;
 		}
 	}
 
 	close(fd);
-
 	return 0;
 }

@@ -101,7 +101,7 @@ int main(int argc, char **argv){
 				 *args == "pwd" ||
 				 *args == "cd"  ||
 				 *args == "put" ||
-				 *args == "get")
+				 *args == "get"){
 			//Execute the command remotely.
 			DeamonExecute(args);
 		}else{
@@ -160,11 +160,10 @@ char **args;
 {
     //DO NETWORKING THINGS
 	
-	/*Pseudo
 	if("get"){
-		getClient(args, num);
+		getClient(args, BUFF_SIZE);
 	}else if("put"){
-		putClient(args, num);
+		putClient(args, BUFF_SIZE);
 	}else if("dir"){
 		//send dir command to server
 	}else if("pwd"){
@@ -174,7 +173,6 @@ char **args;
 	}else{
 		printf("ERROR: Unknown command!");
 	}
-	END Pseudo*/
 }
 
 
